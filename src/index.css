@@ -6,9 +6,10 @@
   html {
     color-scheme: dark;
     background-color: #070709;
-    overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: none;
+    overflow-x: clip;
+    touch-action: pan-y;
+    height: auto;
   }
 
   /* Lenis smooth scrolling standards */
@@ -32,11 +33,11 @@
     background-color: #070709;
     color: #ffffff;
     font-family: 'Exo', sans-serif;
-    overflow-x: hidden;
+    overflow-x: clip;
     width: 100%;
     min-height: 100dvh;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none;
+    touch-action: pan-y;
   }
 }
 

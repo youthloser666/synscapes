@@ -83,9 +83,9 @@ export default function App() {
     <div className="relative min-h-[100dvh] w-full bg-[#070709] text-white selection:bg-white selection:text-black overflow-x-hidden">
       {/* 
         Persistent Ambient Video Backdrop (landing.mp4)
-        Hardware-accelerated viewport lock without software filters or scale shifts
+        Hardware-accelerated viewport lock with vertical buffer to absorb mobile address bar movement
       */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden will-change-transform transform-gpu">
+      <div className="fixed -top-12 -bottom-12 left-0 right-0 z-0 pointer-events-none overflow-hidden will-change-transform transform-gpu">
         <video
           autoPlay
           loop
