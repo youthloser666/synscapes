@@ -14,17 +14,35 @@ export default function App() {
   const [eventData, setEventData] = useState(null);
   const [artistsData, setArtistsData] = useState(null);
   const [archiveData, setArchiveData] = useState(null);
+  const [isDesktop, setIsDesktop] = useState(false);
 
-  // Initialize Lenis Smooth Inertial Scroll
+  // Detect desktop vs mobile/touch devices
   useEffect(() => {
+    const checkIsDesktop = () => {
+      const desktop = window.innerWidth >= 1024 && !('ontouchstart' in window);
+      setIsDesktop(desktop);
+    };
+    checkIsDesktop();
+    window.addEventListener('resize', checkIsDesktop);
+    return () => window.removeEventListener('resize', checkIsDesktop);
+  }, []);
+
+  // Initialize Lenis Smooth Inertial Scroll ONLY on Desktop (>= 1024px & non-touch)
+  useEffect(() => {
+    const isMobileOrTouch = window.innerWidth < 1024 || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (isMobileOrTouch) {
+      // Use native hardware-accelerated momentum touch scrolling on mobile for flawless 120Hz/60Hz
+      return;
+    }
+
     const lenis = new Lenis({
-      duration: 1.25,
+      duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       direction: 'vertical',
       gestureDirection: 'vertical',
       smooth: true,
       smoothTouch: false,
-      touchMultiplier: 1.8,
+      touchMultiplier: 1.5,
       wheelMultiplier: 0.95,
       infinite: false,
     });
@@ -41,6 +59,19 @@ export default function App() {
       lenis.destroy();
     };
   }, []);
+
+  // Adaptive motion configuration: animated reveals on desktop, instant smooth render on mobile
+  const motionProps = isDesktop
+    ? {
+        initial: { opacity: 0, y: 40 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true, margin: '-60px' },
+        transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] },
+      }
+    : {
+        initial: false,
+        animate: { opacity: 1, y: 0 },
+      };
 
   useEffect(() => {
     api.getFeaturedEvent().then(setEventData).catch(console.error);
@@ -90,10 +121,7 @@ export default function App() {
           */}
           <motion.section
             id="about"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            {...motionProps}
             className="flex flex-col lg:flex-row justify-between items-start gap-8 sm:gap-10 lg:gap-16 pt-4 sm:pt-6 mb-12 sm:mb-16"
           >
             {/* Left Card: High Tier */}
@@ -108,32 +136,17 @@ export default function App() {
           </motion.section>
 
           {/* Middle: Community Section (DJs & Visual Artists) with motion reveal */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          >
+          <motion.div {...motionProps}>
             <Community artists={artistsData} />
           </motion.div>
 
           {/* Lower: Audiovisual Archive with motion reveal */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          >
+          <motion.div {...motionProps}>
             <Archive archiveData={archiveData} />
           </motion.div>
 
           {/* Floating Footer Card: "STAY IN THE LOOP" with motion reveal */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          >
+          <motion.div {...motionProps}>
             <Footer />
           </motion.div>
         </div>
