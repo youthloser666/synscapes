@@ -122,7 +122,7 @@ export default function App() {
         SECTION 1: HERO (Image 1)
         Clean, no extra ornaments/subtitles, no artificial SVG outlines, semi-transparent grey logo
       */}
-      <main className="relative z-10 w-full overflow-x-hidden">
+      <main className="app-viewport-scroller relative z-10 w-full overflow-x-hidden">
         <Hero />
 
         {/* 

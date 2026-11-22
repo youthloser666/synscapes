@@ -1,69 +1,163 @@
-import React, { useState } from 'react';
-import { Menu, X, ArrowUpRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, Instagram, Mail } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const navLinks = [
-    { label: 'ABOUT', href: '#about' },
-    { label: 'EVENTS', href: '#events' },
-    { label: 'COMMUNITY', href: '#community' },
-    { label: 'ARCHIVE', href: '#archive' },
-    { label: 'CONNECT', href: '#connect' },
-  ];
+  // Close menu on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Smooth scroll helper supporting both mobile container and desktop window scroll
+  const handleNavClick = (e, href) => {
+    e.preventDefault();
+    setIsOpen(false);
+    const targetId = href.replace('#', '');
+    const element = document.getElementById(targetId);
+    if (element) {
+      const scroller = document.querySelector('.app-viewport-scroller');
+      if (scroller && window.innerWidth < 1024) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
 
   return (
     <>
+      {/* Click-outside backdrop overlay with fade */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px]"
+          />
+        )}
+      </AnimatePresence>
+
       {/* 
-        Top Header matching Image 1:
-        Only the minimalist hamburger menu icon in the top right, clean and responsive across all screen sizes.
+        Top-Right Navigation Container:
+        - Hamburger button stays permanently anchored in the top-right
+        - When clicked, button turns white with a circular background
+        - Staggered monochrome pill items appear directly beneath without overlapping the button
       */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-end px-4 sm:px-6 md:px-12 py-4 sm:py-6 pointer-events-none">
+      <header className="fixed top-4 right-4 sm:top-6 sm:right-8 z-50 flex flex-col items-end pointer-events-none">
+        {/* Permanent Hamburger Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle navigation menu"
-          className="pointer-events-auto p-2 sm:p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-white hover:text-white/70 active:scale-95 transition-all focus:outline-none"
+          aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          className={`pointer-events-auto w-11 h-11 flex items-center justify-center transition-all duration-300 focus:outline-none shadow-none ${
+            isOpen
+              ? 'rounded-full bg-white text-black'
+              : 'text-white hover:text-white/80 active:scale-95'
+          }`}
         >
-          {isOpen ? <X className="w-7 h-7 sm:w-8 sm:h-8" /> : <Menu className="w-7 h-7 sm:w-8 sm:h-8" />}
+          <Menu className={`w-6 h-6 sm:w-7 sm:h-7 ${isOpen ? 'text-black' : 'text-white'}`} />
         </button>
-      </header>
 
-      {/* Slide-in Overlay Navigation Drawer with Responsive Touch Scrolling */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col justify-between p-6 sm:p-10 md:p-16 animate-fadeIn overflow-y-auto max-h-screen">
-          <div className="flex justify-between items-center pb-4 border-b border-white/10">
-            <span className="font-mono text-[11px] sm:text-xs tracking-widest text-white/50">NAVIGATION INDEX</span>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-white/70 hover:text-white text-xs tracking-widest font-mono p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+        {/* 
+          Floating Staggered Pill Cluster:
+          - Pure black background with subtle white border
+          - Zero shadow
+          - Fades in and out smoothly with Framer Motion
+        */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: -6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: -6 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="pointer-events-auto mt-3 flex flex-col items-end gap-2 max-w-[92vw]"
             >
-              [CLOSE]
-            </button>
-          </div>
+              {/* Row 1: Primary Action */}
+              <div className="flex items-center gap-2">
+                <a
+                  href="#events"
+                  onClick={(e) => handleNavClick(e, '#events')}
+                  className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-black border border-white/25 hover:bg-white hover:text-black text-white font-sans font-bold text-xs sm:text-sm tracking-wide shadow-none active:scale-95 transition-all duration-200 min-h-[38px] flex items-center"
+                >
+                  Reserve Pass
+                </a>
+              </div>
 
-          <nav className="flex flex-col gap-5 sm:gap-7 md:gap-8 my-auto py-8">
-            {navLinks.map((item, idx) => (
-              <a
-                key={item.label}
-                href={item.href}
-                onClick={() => setIsOpen(false)}
-                className="group flex items-center justify-between text-2xl sm:text-4xl md:text-6xl font-display font-normal tracking-tight text-white/80 hover:text-white hover:translate-x-2 sm:hover:translate-x-3 transition-all duration-300 py-1"
-              >
-                <span className="flex items-center">
-                  <span className="text-[10px] sm:text-xs font-mono text-white/40 mr-3 sm:mr-4 font-normal">0{idx + 1}</span>
-                  {item.label}
-                </span>
-                <ArrowUpRight className="w-6 h-6 sm:w-8 sm:h-8 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </a>
-            ))}
-          </nav>
+              {/* Row 2: Secondary Section Pills */}
+              <div className="flex flex-wrap justify-end items-center gap-2">
+                <a
+                  href="#community"
+                  onClick={(e) => handleNavClick(e, '#community')}
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-black border border-white/25 hover:bg-white hover:text-black text-white font-sans font-bold text-xs sm:text-sm tracking-wide shadow-none active:scale-95 transition-all duration-200 min-h-[38px] flex items-center"
+                >
+                  Community
+                </a>
+                <a
+                  href="#about"
+                  onClick={(e) => handleNavClick(e, '#about')}
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-black border border-white/25 hover:bg-white hover:text-black text-white font-sans font-bold text-xs sm:text-sm tracking-wide shadow-none active:scale-95 transition-all duration-200 min-h-[38px] flex items-center"
+                >
+                  About
+                </a>
+                <a
+                  href="#archive"
+                  onClick={(e) => handleNavClick(e, '#archive')}
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-black border border-white/25 hover:bg-white hover:text-black text-white font-sans font-bold text-xs sm:text-sm tracking-wide shadow-none active:scale-95 transition-all duration-200 min-h-[38px] flex items-center"
+                >
+                  Archive
+                </a>
+              </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-6 border-t border-white/10 text-[10px] sm:text-xs font-mono text-white/50 gap-2">
-            <span>BELGRADE / BERLIN / TOKYO</span>
-            <span>SYNESCAPE AUDIOVISUAL &bull; 2026</span>
-          </div>
-        </div>
-      )}
+              {/* Row 3: Event Session Pill */}
+              <div className="flex justify-end items-center gap-2">
+                <a
+                  href="#events"
+                  onClick={(e) => handleNavClick(e, '#events')}
+                  className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-black border border-white/25 hover:bg-white hover:text-black text-white font-sans font-bold text-xs sm:text-sm tracking-wide shadow-none active:scale-95 transition-all duration-200 min-h-[38px] flex items-center"
+                >
+                  Synescape Session III
+                </a>
+              </div>
+
+              {/* Row 4: Subscribe & Social Icon Circular Pills */}
+              <div className="flex items-center gap-2">
+                <a
+                  href="#connect"
+                  onClick={(e) => handleNavClick(e, '#connect')}
+                  className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-black border border-white/25 hover:bg-white hover:text-black text-white font-sans font-bold text-xs sm:text-sm tracking-wide shadow-none active:scale-95 transition-all duration-200 min-h-[38px] flex items-center"
+                >
+                  Subscribe
+                </a>
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Instagram"
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black border border-white/25 hover:bg-white hover:text-black text-white flex items-center justify-center shadow-none active:scale-95 transition-all duration-200"
+                >
+                  <Instagram className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2]" />
+                </a>
+                <a
+                  href="mailto:contact@synscape.art"
+                  aria-label="Contact Email"
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black border border-white/25 hover:bg-white hover:text-black text-white flex items-center justify-center shadow-none active:scale-95 transition-all duration-200"
+                >
+                  <Mail className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2]" />
+                </a>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
     </>
   );
 }

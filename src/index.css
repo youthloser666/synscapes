@@ -41,6 +41,35 @@
   }
 }
 
+/* 
+  Mobile Persistent Address Bar Lock Architecture:
+  Locks root document scroll on mobile to keep browser address bar permanently visible,
+  completely eliminating viewport resize jumps and video crop jerks.
+*/
+@media (max-width: 1023px) {
+  html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: fixed;
+  }
+
+  .app-viewport-scroller {
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-viewport-scroller {
+    height: auto;
+    overflow: visible;
+  }
+}
+
 /* Custom Avant-Garde & Techno-Brutalist Utilities */
 .writing-mode-vertical {
   writing-mode: vertical-rl;
