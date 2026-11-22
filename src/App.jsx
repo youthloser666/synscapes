@@ -83,20 +83,21 @@ export default function App() {
     <div className="relative min-h-[100dvh] w-full bg-[#070709] text-white selection:bg-white selection:text-black overflow-x-hidden">
       {/* 
         Persistent Ambient Video Backdrop (landing.mp4)
-        Continuously plays behind the Hero and the staggered frosted content cards across all viewports
+        Hardware-accelerated viewport lock without software filters or scale shifts
       */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden will-change-transform transform-gpu">
         <video
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover filter brightness-[0.70] contrast-[1.1] scale-105"
+          className="w-full h-full object-cover"
         >
           <source src="/LANDING.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-black/25 backdrop-blur-[0.5px]" />
-        <div className="absolute inset-0 film-grain opacity-30" />
+        {/* Pure color dark overlay to provide contrast without GPU shader overhead */}
+        <div className="absolute inset-0 bg-black/55 pointer-events-none" />
+        <div className="absolute inset-0 film-grain opacity-25 pointer-events-none" />
       </div>
 
       {/* Floating Top Navigation (Only Hamburger Menu per Image 1) */}
