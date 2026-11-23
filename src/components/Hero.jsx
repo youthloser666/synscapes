@@ -10,15 +10,15 @@ export default function Hero() {
         Hero Landing matching Image 1:
         1. No artificial SVG outline lines behind the logo (video backdrop provides the natural ambient aesthetic).
         2. Clean and devoid of extra ornaments/subtitles.
-        3. SYNESCAPE logo in semi-transparent grey (#a3a8b4 with 0.8 opacity) fluidly scaled across all viewports.
+        3. SYNESCAPE logo in solid pitch-black (#000000) with deep black drop-shadow effects.
       */}
       <div className="relative z-20 flex flex-col items-center justify-center text-center w-full max-w-[1500px]">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="-17.17 0 4189.17 494.39"
-          className="w-[96%] sm:w-[92%] md:w-[88%] max-w-[1350px] h-auto drop-shadow-[0_4px_35px_rgba(0,0,0,0.6)] select-none"
+          className="w-[96%] sm:w-[92%] md:w-[88%] max-w-[1350px] h-auto drop-shadow-[0_10px_35px_rgba(0,0,0,1)] drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] select-none"
         >
-          <g fill="#a3a8b4" fillOpacity="0.80">
+          <g fill="#000000">
             <path d="M41.0001 577.999c0,-234.999 238.997,-240.999 413.999,-252 110.003,-6.99734 195.003,-15.9969 195.003,-76.9982 0,-46.0022 -49.002,-69.0032 -153.006,-69.0032 -130.995,0 -197.996,36.005 -197.996,107.004l-269.002 0c0,-192.004 152.999,-299 450.004,-299 282.997,0 435.995,96.9995 435.995,293.998 0,222.002 -264,217 -456.994,231.999 -83.0048,5.99968 -153.006,16.0037 -153.006,67.0011 0,46.9998 54.004,79.0004 153.006,79.0004 102.999,0 174.995,-34.0028 174.995,-102.999l268.004 0c0,190.999 -153.006,295.003 -431,295.003 -272.999,0 -430.003,-100.006 -430.003,-274.004z" transform="translate(-17.17, 487.52) scale(0.57221, -0.57221)" />
             <path d="M407.001 0l264 0 0 242.003 402.997 597.994 -316.002 0 -207.994 -320.997 -26.0009 0 -208 320.997 -316.002 0 407.001 -604 0 -235.997z" transform="translate(440.60, 487.52) scale(0.57221, -0.57221)" />
             <path d="M59.9968 0l252 0 0 519 324.004 -519 331.001 0 0 839.997 -252 0 0 -514.996 -324.004 514.996 -331.001 0 0 -839.997z" transform="translate(898.37, 487.52) scale(0.57221, -0.57221)" />

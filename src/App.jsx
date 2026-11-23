@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Lenis from 'lenis';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import AboutSection from './components/AboutSection';
@@ -14,18 +14,54 @@ export default function App() {
   const [eventData, setEventData] = useState(null);
   const [artistsData, setArtistsData] = useState(null);
   const [archiveData, setArchiveData] = useState(null);
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [screenLockHeight, setScreenLockHeight] = useState('100lvh');
-
-  // Lock physical screen height on mount to eliminate mobile address bar resize jerks
-  useEffect(() => {
+  const [isDesktop, setIsDesktop] = useState(() => {
     if (typeof window !== 'undefined') {
-      const physicalHeight = window.screen?.height || window.innerHeight;
-      if (physicalHeight > 0) {
-        setScreenLockHeight(`${physicalHeight}px`);
-      }
+      return window.innerWidth >= 1024 && !('ontouchstart' in window);
     }
-  }, []);
+    return false;
+  });
+
+  // Scroller & Section Refs for Scroll-Linked Parallax Transforms
+  const mainScrollerRef = useRef(null);
+  const dualCardsRef = useRef(null);
+  const communityRef = useRef(null);
+  const archiveRef = useRef(null);
+  const footerRef = useRef(null);
+
+  // Parallax Scroll Tracking for Staggered Dual Cards ("MORE THAN MUSIC" & "SESSION III")
+  const { scrollYProgress: dualCardsProgress } = useScroll({
+    target: dualCardsRef,
+    offset: ["start end", "end start"],
+    container: isDesktop ? undefined : mainScrollerRef
+  });
+
+  // Dual-Speed Differential Parallax: Left card moves faster, right card moves in counter-balance
+  const yLeftCard = useTransform(dualCardsProgress, [0, 1], isDesktop ? [55, -55] : [20, -20]);
+  const yRightCard = useTransform(dualCardsProgress, [0, 1], isDesktop ? [-35, 35] : [-15, 15]);
+
+  // Parallax Scroll Tracking for Community Section
+  const { scrollYProgress: communityProgress } = useScroll({
+    target: communityRef,
+    offset: ["start end", "end start"],
+    container: isDesktop ? undefined : mainScrollerRef
+  });
+  const yCommunity = useTransform(communityProgress, [0, 1], isDesktop ? [40, -40] : [15, -15]);
+
+  // Parallax Scroll Tracking for Audiovisual Archive
+  const { scrollYProgress: archiveProgress } = useScroll({
+    target: archiveRef,
+    offset: ["start end", "end start"],
+    container: isDesktop ? undefined : mainScrollerRef
+  });
+  const yArchive = useTransform(archiveProgress, [0, 1], isDesktop ? [45, -45] : [15, -15]);
+
+  // Parallax Scroll Tracking for Floating Footer
+  const { scrollYProgress: footerProgress } = useScroll({
+    target: footerRef,
+    offset: ["start end", "end start"],
+    container: isDesktop ? undefined : mainScrollerRef
+  });
+  const yFooter = useTransform(footerProgress, [0, 1], isDesktop ? [30, -30] : [10, -10]);
 
   // Detect desktop vs mobile/touch devices
   useEffect(() => {
@@ -71,17 +107,17 @@ export default function App() {
     };
   }, []);
 
-  // Adaptive motion configuration: animated reveals on desktop, instant smooth render on mobile
+  // Adaptive motion configuration: clean fade reveal without y-translation conflicts
   const motionProps = isDesktop
     ? {
-        initial: { opacity: 0, y: 40 },
-        whileInView: { opacity: 1, y: 0 },
+        initial: { opacity: 0 },
+        whileInView: { opacity: 1 },
         viewport: { once: true, margin: '-60px' },
-        transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] },
+        transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
       }
     : {
         initial: false,
-        animate: { opacity: 1, y: 0 },
+        animate: { opacity: 1 },
       };
 
   useEffect(() => {
@@ -94,25 +130,19 @@ export default function App() {
     <div className="relative min-h-[100dvh] w-full bg-[#070709] text-white selection:bg-white selection:text-black overflow-x-hidden">
       {/* 
         Persistent Ambient Video Backdrop (landing.mp4)
-        Static Screen Dimension Lock: permanently locked to physical screen height (100lvh/screen.height)
-        Completely eliminates address bar resize jerks during mobile scroll
+        True viewport-centered positioning (fixed inset-0 + object-cover object-center)
+        Ensures the central video motif and Hero logo align dead-center
       */}
-      <div
-        className="fixed top-0 left-0 w-full z-0 pointer-events-none overflow-hidden will-change-transform transform-gpu"
-        style={{ height: screenLockHeight, minHeight: '100lvh' }}
-      >
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden will-change-transform transform-gpu flex items-center justify-center">
         <video
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center"
         >
           <source src="/LANDING.mp4" type="video/mp4" />
         </video>
-        {/* Pure color dark overlay to provide contrast without GPU shader overhead */}
-        <div className="absolute inset-0 bg-black/55 pointer-events-none" />
-        <div className="absolute inset-0 film-grain opacity-25 pointer-events-none" />
       </div>
 
       {/* Floating Top Navigation (Only Hamburger Menu per Image 1) */}
@@ -122,7 +152,7 @@ export default function App() {
         SECTION 1: HERO (Image 1)
         Clean, no extra ornaments/subtitles, no artificial SVG outlines, semi-transparent grey logo
       */}
-      <main className="app-viewport-scroller relative z-10 w-full overflow-x-hidden">
+      <main ref={mainScrollerRef} className="app-viewport-scroller relative z-10 w-full overflow-x-hidden">
         <Hero />
 
         {/* 
@@ -131,38 +161,61 @@ export default function App() {
         */}
         <div className="relative z-10 max-w-[1720px] mx-auto px-4 sm:px-8 lg:px-14 pb-12 sm:pb-16">
           {/* 
-            Staggered / Bertingkat Dual Cards:
+            Staggered Dual Cards with Differential Parallax:
             - Desktop: Left card high, right card offset downwards (lg:mt-48 xl:mt-56)
-            - Mobile/Tablet (< lg:): Stacked cleanly with zero overlap or layout break
+            - As user scrolls, Left Card and Right Card glide with differential parallax velocities
           */}
           <motion.section
             id="about"
+            ref={dualCardsRef}
             {...motionProps}
             className="flex flex-col lg:flex-row justify-between items-start gap-8 sm:gap-10 lg:gap-16 pt-4 sm:pt-6 mb-12 sm:mb-16"
           >
-            {/* Left Card: High Tier */}
-            <div className="w-full lg:w-[48%] flex justify-start">
+            {/* Left Card: High Tier (with dynamic upward parallax float) */}
+            <motion.div
+              style={{ y: yLeftCard }}
+              className="w-full lg:w-[48%] flex justify-start will-change-transform"
+            >
               <AboutSection />
-            </div>
+            </motion.div>
 
-            {/* Right Card: Low Tier (Offset downwards on desktop) */}
-            <div id="events" className="w-full lg:w-[48%] flex justify-end lg:mt-48 xl:mt-56">
+            {/* Right Card: Low Tier (with counter-balanced floating parallax) */}
+            <motion.div
+              id="events"
+              style={{ y: yRightCard }}
+              className="w-full lg:w-[48%] flex justify-end lg:mt-48 xl:mt-56 will-change-transform"
+            >
               <EventCard event={eventData} />
-            </div>
+            </motion.div>
           </motion.section>
 
-          {/* Middle: Community Section (DJs & Visual Artists) with motion reveal */}
-          <motion.div {...motionProps}>
+          {/* Middle: Community Section (DJs & Visual Artists) with Floating Depth Parallax */}
+          <motion.div
+            ref={communityRef}
+            style={{ y: yCommunity }}
+            {...motionProps}
+            className="will-change-transform"
+          >
             <Community artists={artistsData} />
           </motion.div>
 
-          {/* Lower: Audiovisual Archive with motion reveal */}
-          <motion.div {...motionProps}>
+          {/* Lower: Audiovisual Archive with Floating Depth Parallax */}
+          <motion.div
+            ref={archiveRef}
+            style={{ y: yArchive }}
+            {...motionProps}
+            className="will-change-transform"
+          >
             <Archive archiveData={archiveData} />
           </motion.div>
 
-          {/* Floating Footer Card: "STAY IN THE LOOP" with motion reveal */}
-          <motion.div {...motionProps}>
+          {/* Floating Footer Card: "STAY IN THE LOOP" with Floating Depth Parallax */}
+          <motion.div
+            ref={footerRef}
+            style={{ y: yFooter }}
+            {...motionProps}
+            className="will-change-transform"
+          >
             <Footer />
           </motion.div>
         </div>

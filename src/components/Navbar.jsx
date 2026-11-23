@@ -60,10 +60,10 @@ export default function Navbar() {
           className={`pointer-events-auto w-11 h-11 flex items-center justify-center transition-all duration-300 focus:outline-none shadow-none ${
             isOpen
               ? 'rounded-full bg-white text-black'
-              : 'text-white hover:text-white/80 active:scale-95'
+              : 'text-black hover:text-black/70 active:scale-95'
           }`}
         >
-          <Menu className={`w-6 h-6 sm:w-7 sm:h-7 ${isOpen ? 'text-black' : 'text-white'}`} />
+          <Menu className={`w-7 h-7 sm:w-8 sm:h-8 ${isOpen ? 'text-black' : 'text-black'}`} />
         </button>
 
         {/* 
