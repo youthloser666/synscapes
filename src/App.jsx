@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Lenis from 'lenis';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Navbar from './components/Navbar';
+import CursorTrail from './components/CursorTrail';
 import Hero from './components/Hero';
 import AboutSection from './components/AboutSection';
 import EventCard from './components/EventCard';
@@ -147,6 +148,9 @@ export default function App() {
 
       {/* Floating Top Navigation (Only Hamburger Menu per Image 1) */}
       <Navbar />
+
+      {/* Interactive Cursor Shader Trail (Bautista Berto / Codrops Fiery Ember Trail) */}
+      <CursorTrail />
 
       {/* 
         SECTION 1: HERO (Image 1)
