@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import gsap from 'gsap';
 
@@ -14,10 +14,16 @@ const CITY_COUNTRY_MAP = {
   Paris: 'FR'
 };
 
+// Preview card dimensions (must match CSS below)
+const CARD_W = 240;
+const CARD_H = 320;
+const EDGE_PAD = 16; // min gap from viewport edge
+
 export default function Community({ artists }) {
   const [activeArtist, setActiveArtist] = useState(null);
   const previewRef = useRef(null);
   const isTouchDevice = useRef(false);
+  const mousePos = useRef({ x: 0, y: 0 });
 
   const djs = artists?.djs || [
     { id: '1', name: 'SAJAAK', city: 'Belgrade', genre: 'Dark Techno', roleType: 'DJ' },
@@ -33,6 +39,26 @@ export default function Community({ artists }) {
     { id: '8', name: 'KINETIC', city: 'Amsterdam', genre: 'Scenography', roleType: 'VISUAL_ARTIST' }
   ];
 
+  // Viewport-aware auto-flip: compute card position so it never clips edges
+  const computeCardPosition = useCallback((cx, cy) => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // Horizontal: prefer right of cursor, flip left if clipped
+    let x = cx + 20;
+    if (x + CARD_W + EDGE_PAD > vw) {
+      x = cx - CARD_W - 20;
+    }
+    // Clamp horizontal
+    x = Math.max(EDGE_PAD, Math.min(x, vw - CARD_W - EDGE_PAD));
+
+    // Vertical: center on cursor, then clamp to viewport
+    let y = cy - CARD_H / 2;
+    y = Math.max(EDGE_PAD, Math.min(y, vh - CARD_H - EDGE_PAD));
+
+    return { x, y };
+  }, []);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       isTouchDevice.current = window.matchMedia('(hover: none)').matches || ('ontouchstart' in window);
@@ -41,22 +67,24 @@ export default function Community({ artists }) {
     const preview = previewRef.current;
     if (!preview || isTouchDevice.current) return;
 
-    // Set initial position and state with GSAP
+    // Initial hidden state
     gsap.set(preview, {
-      xPercent: 12,
-      yPercent: -50,
-      scale: 0.8,
+      x: 0,
+      y: 0,
+      scale: 0.85,
       autoAlpha: 0,
       pointerEvents: 'none'
     });
 
-    // High performance smooth interpolation for cursor tracking
-    const xTo = gsap.quickTo(preview, 'x', { duration: 0.35, ease: 'power3.out' });
-    const yTo = gsap.quickTo(preview, 'y', { duration: 0.35, ease: 'power3.out' });
+    // Smooth GSAP interpolation for position
+    const xTo = gsap.quickTo(preview, 'x', { duration: 0.3, ease: 'power3.out' });
+    const yTo = gsap.quickTo(preview, 'y', { duration: 0.3, ease: 'power3.out' });
 
     const handleMouseMove = (e) => {
-      xTo(e.clientX);
-      yTo(e.clientY);
+      mousePos.current = { x: e.clientX, y: e.clientY };
+      const pos = computeCardPosition(e.clientX, e.clientY);
+      xTo(pos.x);
+      yTo(pos.y);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -64,16 +92,21 @@ export default function Community({ artists }) {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, []);
+  }, [computeCardPosition]);
 
   const handleRowEnter = (artist) => {
     if (isTouchDevice.current) return;
     setActiveArtist(artist);
+
     if (previewRef.current) {
+      // Snap to computed position instantly, then animate in
+      const pos = computeCardPosition(mousePos.current.x, mousePos.current.y);
+      gsap.set(previewRef.current, { x: pos.x, y: pos.y });
+
       gsap.to(previewRef.current, {
         autoAlpha: 1,
         scale: 1,
-        duration: 0.3,
+        duration: 0.28,
         ease: 'power2.out',
         overwrite: 'auto'
       });
@@ -86,7 +119,7 @@ export default function Community({ artists }) {
       gsap.to(previewRef.current, {
         autoAlpha: 0,
         scale: 0.85,
-        duration: 0.22,
+        duration: 0.2,
         ease: 'power2.in',
         overwrite: 'auto'
       });
@@ -104,56 +137,27 @@ export default function Community({ artists }) {
       onMouseLeave={handleRowLeave}
       className="frosted-glass border border-white/10 p-6 sm:p-8 md:p-12 lg:p-16 my-10 sm:my-16 w-full relative"
     >
-      {/* Floating GSAP Cursor Tracking Preview Card (Solid Black Dummy Fill) */}
+      {/* Floating GSAP Cursor Tracking Preview — Simple Black Dummy */}
       <div
         ref={previewRef}
-        className="fixed top-0 left-0 z-50 pointer-events-none w-60 h-76 sm:w-68 sm:h-88 md:w-72 md:h-96 rounded-xl border border-white/20 bg-black/95 backdrop-blur-md shadow-[0_25px_60px_rgba(0,0,0,0.95)] p-3.5 flex flex-col justify-between overflow-hidden"
-        style={{ willChange: 'transform, opacity' }}
+        className="fixed top-0 left-0 z-50 pointer-events-none overflow-hidden rounded-lg border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.9)]"
+        style={{
+          width: CARD_W,
+          height: CARD_H,
+          willChange: 'transform, opacity'
+        }}
       >
-        {/* Dummy Photo Fill (Foto Hitam Fill) */}
-        <div className="w-full flex-1 rounded-lg bg-black border border-white/10 relative overflow-hidden flex flex-col items-center justify-center p-4">
-          {/* Subtle brutalist grid metadata */}
-          <div className="absolute top-2.5 left-2.5 text-[9px] font-mono text-white/35 tracking-widest">
-            SYN // {activeArtist ? getCountryCode(activeArtist) : 'INTL'}
-          </div>
-          <div className="absolute top-2.5 right-2.5 text-[9px] font-mono text-white/35 tracking-widest">
-            ASSET // PENDING
-          </div>
-          <div className="absolute bottom-2.5 left-2.5 text-[9px] font-mono text-white/35 tracking-widest">
-            DUMMY FILL
-          </div>
-          <div className="absolute bottom-2.5 right-2.5 text-[9px] font-mono text-white/35 tracking-widest">
-            60FPS TRACK
-          </div>
-
-          {/* Minimalist graphic dummy radar circle */}
-          <div className="w-16 h-16 rounded-full border border-white/15 flex items-center justify-center mb-3 bg-white/[0.02]">
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-white/50 animate-ping" />
-            </div>
-          </div>
-
-          <p className="font-mono text-[10px] tracking-widest text-zinc-400 uppercase text-center">
-            PHOTO ASSET PREVIEW
-          </p>
-          <p className="font-mono text-[9px] text-zinc-600 tracking-wider mt-0.5">
-            [ SOLID BLACK DUMMY ]
-          </p>
-        </div>
-
-        {/* Card Footer Info */}
-        <div className="pt-3 px-1 flex items-center justify-between border-t border-white/10 mt-2">
-          <div className="min-w-0 pr-2">
+        {/* Clean black fill — dummy photo placeholder */}
+        <div className="w-full h-full bg-black relative">
+          {/* Minimal artist info at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
             <h4 className="font-display text-sm text-white tracking-wide truncate uppercase">
               {activeArtist?.name || 'ARTIST'}
             </h4>
-            <p className="font-mono text-[10px] text-zinc-400 tracking-wider truncate">
+            <p className="font-mono text-[10px] text-zinc-400 tracking-wider truncate mt-0.5">
               {activeArtist?.city} · {activeArtist?.genre}
             </p>
           </div>
-          <span className="font-mono text-xs font-bold text-white px-2 py-0.5 border border-white/20 rounded bg-white/5 flex-shrink-0">
-            {activeArtist ? getCountryCode(activeArtist) : '--'}
-          </span>
         </div>
       </div>
 
@@ -180,7 +184,6 @@ export default function Community({ artists }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
         {/* Category 1: DJs */}
         <div className="flex flex-col">
-          {/* Category Header resembling Lineup: label from Image 2 */}
           <div className="flex items-center justify-between pb-3 mb-2 border-b border-white/20">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs text-zinc-400 tracking-widest uppercase">
@@ -195,7 +198,6 @@ export default function Community({ artists }) {
             </span>
           </div>
 
-          {/* List Rows */}
           <div className="flex flex-col divide-y divide-white/10">
             {djs.map((artist) => (
               <div
@@ -226,7 +228,6 @@ export default function Community({ artists }) {
 
         {/* Category 2: Visual Artists */}
         <div className="flex flex-col">
-          {/* Category Header resembling Lineup: label from Image 2 */}
           <div className="flex items-center justify-between pb-3 mb-2 border-b border-white/20">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs text-zinc-400 tracking-widest uppercase">
@@ -241,7 +242,6 @@ export default function Community({ artists }) {
             </span>
           </div>
 
-          {/* List Rows */}
           <div className="flex flex-col divide-y divide-white/10">
             {visualArtists.map((artist) => (
               <div
